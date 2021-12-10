@@ -1,0 +1,36 @@
+.main {
+  color: #eaeaea;
+  margin: 5rem 5rem 0rem 5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.content {
+  margin-top: 1rem;
+  width: 50%;
+  height: 25rem;
+  padding: 1rem;
+}
+.content-form {
+  margin-top: 4rem;
+  display: flex;
+  flex-direction: row;
+}
+.carousel {
+  height: 20rem;
+  width: 33rem;
+}
+.carousel-indicators {
+  position: absolute;
+  bottom: -3.66rem;
+}
+.carousel .carousel-inner .carousel-item img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  height: 20rem;
+  width: 22rem;
+  border: 2px solid #08d9d6;
+  border-radius: 50%;
+}
