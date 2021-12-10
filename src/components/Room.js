@@ -11,12 +11,14 @@ const Video = (props) => {
       videoRef.current.srcObject = stream;
     });
   }, []);
-  
+
   return <video className="video" muted playsInline autoPlay ref={videoRef} />;
 };
 
 const Room = (props) => {
-  const [mic, setMic] = useState(false);
+  console.log(props);
+  const [toggleAudio, setToggleAudio] = useState(true);
+  const [toggleVideo, setToggleVideo] = useState(true);
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
   const userVideo = useRef();
@@ -24,9 +26,11 @@ const Room = (props) => {
   const roomId = props.match.params.roomId;
 
   useEffect(() => {
-    socketRef.current = io.connect("https://video-chat-app-backend-webrtc.herokuapp.com/");
+    socketRef.current = io.connect(
+      "https://video-chat-app-backend-webrtc.herokuapp.com/"
+    );
     navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
+      .getUserMedia({ video: toggleVideo, audio: true })
       .then((stream) => {
         userVideo.current.srcObject = stream;
         socketRef.current.emit("joinedRoom", roomId);
@@ -102,7 +106,7 @@ const Room = (props) => {
       <div className="videos">
         <video
           className="video myvideo"
-          muted={mic ? false : true}
+          muted={toggleAudio ? false : true}
           ref={userVideo}
           autoPlay
           playsInline
@@ -116,14 +120,14 @@ const Room = (props) => {
         <button
           className="btn rounded-circle"
           style={{ backgroundColor: "#363B45" }}
-          value={mic}
-          onClick={() => setMic(!mic)}
+          value={toggleAudio}
+          onClick={() => setToggleAudio(!toggleAudio)}
         >
-          {mic ? (
+          {toggleAudio ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="25"
-              height="40"
+              width="27"
+              height="45"
               fill="#08D9D6"
               style={{ backgroundColor: "#363B45" }}
               className="bi bi-mic-fill"
@@ -135,8 +139,8 @@ const Room = (props) => {
           ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="25"
-              height="40"
+              width="27"
+              height="45"
               fill="#08D9D6"
               style={{ backgroundColor: "#363B45" }}
               className="bi bi-mic-mute-fill"
@@ -148,15 +152,65 @@ const Room = (props) => {
           )}
         </button>
         <button
+          className="btn rounded-circle"
+          style={{ backgroundColor: "#363B45" }}
+          value={toggleVideo}
+          onClick={() => {
+            userVideo.current.srcObject.getVideoTracks()[0].enabled =
+              !toggleVideo;
+            //userVideo.current.srcObject.getVideoTracks()[0].stop();
+            setToggleVideo(!toggleVideo);
+          }}
+        >
+          {toggleVideo ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="27"
+              height="45"
+              fill="#08D9D6"
+              style={{ backgroundColor: "#363B45" }}
+              className="bi bi-camera-video-fill"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fillRule="evenodd"
+                d="M0 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 1.983 1.738l3.11-1.382A1 1 0 0 1 16 4.269v7.462a1 1 0 0 1-1.406.913l-3.111-1.382A2 2 0 0 1 9.5 13H2a2 2 0 0 1-2-2V5z"
+              />
+            </svg>
+          ) : (
+            <svg
+              width="27"
+              height="45"
+              fill="#08D9D6"
+              style={{ backgroundColor: "#363B45" }}
+              className="bi bi-camera-video-off-fill"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10.961 12.365a1.99 1.99 0 0 0 .522-1.103l3.11 1.382A1 1 0 0 0 16 11.731V4.269a1 1 0 0 0-1.406-.913l-3.111 1.382A2 2 0 0 0 9.5 3H4.272l6.69 9.365zm-10.114-9A2.001 2.001 0 0 0 0 5v6a2 2 0 0 0 2 2h5.728L.847 3.366zm9.746 11.925-10-14 .814-.58 10 14-.814.58z"
+              />
+            </svg>
+          )}
+        </button>
+        <button
           style={{ backgroundColor: "#FF2E63", color: "#252A34" }}
           className="btn ms-3"
           onClick={() => {
-            window.open("", "_self");
-            window.close();
-            window.close();
+            window.location.href = "/";
           }}
         >
           End Call
+        </button>
+        <button
+          style={{ backgroundColor: "#FF2E63", color: "#252A34" }}
+          className="btn ms-3"
+          onClick={() => {
+            navigator.clipboard.writeText(props.match.params.roomId);
+            alert("Room id copied to clipboard");
+          }}
+        >
+          Copy Room Id
         </button>
       </div>
     </>
