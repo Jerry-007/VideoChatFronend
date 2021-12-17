@@ -12,7 +12,7 @@ const Video = (props) => {
     });
   }, []);
 
-  return <video className="video" muted playsInline autoPlay ref={videoRef} />;
+  return <video className="video" playsInline autoPlay ref={videoRef} />;
 };
 
 const Room = (props) => {
@@ -29,6 +29,8 @@ const Room = (props) => {
     socketRef.current = io.connect(
       "https://video-chat-app-backend-webrtc.herokuapp.com/"
     );
+    // socketRef.current = io.connect("http://localhost:8000/");
+
     navigator.mediaDevices
       .getUserMedia({ video: toggleVideo, audio: true })
       .then((stream) => {
@@ -42,8 +44,13 @@ const Room = (props) => {
               peerId: userId,
               peer,
             });
-            peers.push(peer);
+
+            peers.push({
+              peer,
+              peerId: userId,
+            });
           });
+
           setPeers(peers);
         });
 
@@ -54,12 +61,28 @@ const Room = (props) => {
             peer,
           });
 
-          setPeers((users) => [...users, peer]);
+          const peerObj = {
+            peer,
+            peerId: data.callerId,
+          };
+
+          setPeers((users) => [...users, peerObj]);
         });
 
         socketRef.current.on("receivedReturnedSignal", (data) => {
           const item = peersRef.current.find((p) => p.peerId === data.id);
           item.peer.signal(data.signal);
+        });
+
+        socketRef.current.on("user left", (id) => {
+          const peerObj = peersRef.current.find((p) => p.peerId === id);
+          if (peerObj) {
+            peerObj.peer.destroy();
+          }
+
+          const peers = peersRef.current.filter((p) => p.peerId !== id);
+          peersRef.current = peers;
+          setPeers(peers);
         });
       });
   }, []);
@@ -106,13 +129,13 @@ const Room = (props) => {
       <div className="videos">
         <video
           className="video myvideo"
-          muted={toggleAudio ? false : true}
           ref={userVideo}
           autoPlay
           playsInline
+          muted
         />
-        {peers.map((peer, index) => {
-          return <Video key={index} peer={peer} />;
+        {peers.map((peer) => {
+          return <Video key={peer.peerId} peer={peer.peer} />;
         })}
       </div>
 
@@ -121,7 +144,12 @@ const Room = (props) => {
           className="btn rounded-circle"
           style={{ backgroundColor: "#363B45" }}
           value={toggleAudio}
-          onClick={() => setToggleAudio(!toggleAudio)}
+          onClick={() => {
+            userVideo.current.srcObject.getAudioTracks()[0].enabled =
+              !toggleAudio;
+            //userVideo.current.srcObject.getAudioTracks()[0].stop();
+            setToggleAudio(!toggleAudio);
+          }}
         >
           {toggleAudio ? (
             <svg
